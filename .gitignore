@@ -1,0 +1,48 @@
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.code-workspace
+
+# Logs / runtime
+*.log
+logs/
+tmp/
+.cache/
+
+# Robot / media dumps (keep stock tree; ignore local captures)
+captures/
+recordings/
+*.h264
+*.mp4
+*.bag
+
+# Models / large binaries
+*.pt
+*.onnx
+*.hef
+*.weights

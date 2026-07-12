@@ -1,0 +1,20 @@
+# Keep agent context lean
+.venv/
+venv/
+__pycache__/
+*.pyc
+.git/
+.pytest_cache/
+.ruff_cache/
+
+# Bulky / low-signal media inside stock tree
+MasterPi/CameraCalibration/calibration_images/
+MasterPi/masterpi_pc_software/images/
+**/*.ico
+**/*.mp4
+**/*.h264
+
+# Local captures
+captures/
+recordings/
+logs/

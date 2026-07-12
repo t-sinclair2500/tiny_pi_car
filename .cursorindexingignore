@@ -1,0 +1,16 @@
+.venv/
+venv/
+__pycache__/
+.git/
+.pytest_cache/
+.ruff_cache/
+MasterPi/CameraCalibration/calibration_images/
+MasterPi/masterpi_pc_software/images/
+**/*.ico
+**/*.npz
+captures/
+recordings/
+logs/
+dist/
+build/
+*.egg-info/

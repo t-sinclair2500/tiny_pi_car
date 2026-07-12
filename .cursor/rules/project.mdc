@@ -1,0 +1,13 @@
+---
+description: tiny_pi_car playground context — MasterPi learn-then-replace workflow
+alwaysApply: true
+---
+
+# tiny_pi_car
+
+- Hardware: Raspberry Pi 5 + HiWonder MasterPi (mecanum + 5-DOF arm + camera).
+- Stock HiWonder code lives in `MasterPi/` (Python + OpenCV + expansion-board serial SDK).
+- Prefer new work in `playground/`. Change `MasterPi/` only with a clear reason.
+- Learn stock call paths before rewriting them.
+- When touching motion or grippers: low speed, explicit stop, no unbounded loops.
+- Do not commit secrets, virtualenvs, model weights, or large capture dumps.

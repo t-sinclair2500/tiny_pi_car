@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tiny-pi-car"
+version = "0.1.0"
+description = "MasterPi playground — learn stock HiWonder stack, replace pieces gradually"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "numpy>=1.24",
+  "PyYAML>=6.0",
+  "pyserial>=3.5",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=7.4",
+  "ruff>=0.4",
+]
+vision = [
+  "opencv-python-headless>=4.8",
+]
+ui = [
+  "PyQt5>=5.15",
+]
+
+[project.scripts]
+tiny-pi-smoke = "playground.smoke:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["playground*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

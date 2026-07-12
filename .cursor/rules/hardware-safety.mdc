@@ -1,0 +1,13 @@
+---
+description: Motion and actuator safety for MasterPi experiments
+globs: playground/**/*.py,MasterPi/board_demo/**/*.py,MasterPi/mecanum_control/**/*.py,MasterPi/functions/**/*.py
+alwaysApply: false
+---
+
+# Hardware safety
+
+- Default to the lowest practical speed / duty.
+- End every motion script with stop / neutral (chassis stop, arm safe pose).
+- Prefer short timed moves over `while True` without a clear exit.
+- Assume UART may be misconfigured on a fresh image until `dtoverlay=uart0-pi5` is confirmed.
+- Do not enable gripper close commands in tight loops while debugging.
