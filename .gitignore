@@ -33,6 +33,7 @@ htmlcov/
 logs/
 tmp/
 .cache/
+# Hailo debs / wheels / hailo-apps clone live under .cache/hailo-* (prep only; do not commit)
 
 # Robot / media dumps (keep stock tree; ignore local captures)
 captures/
@@ -46,3 +47,4 @@ recordings/
 *.onnx
 *.hef
 *.weights
+playground/vision/models/

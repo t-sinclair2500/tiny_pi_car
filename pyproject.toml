@@ -28,6 +28,10 @@ ui = [
 
 [project.scripts]
 tiny-pi-smoke = "playground.smoke:main"
+tiny-pi-hailo-probe = "playground.hailo_probe:main"
+tiny-pi-vision-smoke = "playground.vision_smoke:main"
+tiny-pi-autonomy-smoke = "playground.autonomy_smoke:main"
+tiny-pi-sonar-sample = "playground.sonar_sample:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
