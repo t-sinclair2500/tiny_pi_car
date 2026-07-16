@@ -35,12 +35,43 @@ tmp/
 .cache/
 # Hailo debs / wheels / hailo-apps clone live under .cache/hailo-* (prep only; do not commit)
 
-# Robot / media dumps (keep stock tree; ignore local captures)
+# Robot / media dumps — never commit captures or playground snaps
 captures/
 recordings/
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp
+*.bmp
+*.tif
+*.tiff
+*.heic
+*.avi
+*.mov
+*.mkv
+*.webm
 *.h264
 *.mp4
 *.bag
+*.wav
+*.mp3
+*.ogg
+*.flac
+*.m4a
+*.raw
+*.dng
+
+# Intentional assets only (stock HiWonder + docs diagrams)
+!MasterPi/**/*.jpg
+!MasterPi/**/*.jpeg
+!MasterPi/**/*.png
+!MasterPi/**/*.gif
+!docs/**/*.png
+!docs/**/*.jpg
+!docs/**/*.jpeg
+!docs/**/*.gif
+!docs/**/*.webp
 
 # Models / large binaries
 *.pt
