@@ -1,6 +1,6 @@
 [campaign]
 name = "perception-latency-night"
-objective = "Cut capture+inference latency and raise useful dets (cup/bottle/person) with no robot motion."
+objective = "Maximize night_perception_eval score: lower camera+Hailo e2e latency_p50 (no wheel motion)."
 program = "autoresearch/car/program.md"
 editable_paths = [
   "playground/vision/**",
@@ -8,15 +8,21 @@ editable_paths = [
   "playground/autoresearch/**",
   "autoresearch/car/**",
   "scripts/hailo_ab_compare.py",
+  "scripts/night_perception_eval.py",
   "scripts/vision_suite_*.py",
 ]
-# Host-side smoke: agents should prefer live Pi log_detections; this keeps loop tooling happy when GT unset.
+# Fixed scalar: 100 * (budget - latency_p50) / (budget - floor); dets not scored.
 eval_command = [
-  "{python}", "-c",
-  "import json; print(json.dumps({'score': 0.0, 'hard_gates_passed': True, 'note': 'use NIGHT_CARD live Pi metrics'}))"
+  "{python}", "scripts/night_perception_eval.py",
+  "--host", "rpicarbox.local",
+  "--remote-root", "/home/tyler/Desktop/tiny_pi_car",
+  "--frames", "15",
+  "--budget-ms", "500",
+  "--floor-ms", "50",
+  "--json",
 ]
 metric_key = "score"
 hard_gate_key = "hard_gates_passed"
 maximize = true
-min_delta = 0.001
-eval_timeout_s = 120
+min_delta = 0.5
+eval_timeout_s = 240

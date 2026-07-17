@@ -274,6 +274,11 @@ def _parse_args() -> argparse.Namespace:
         action="store_true",
         help="allow an unavailable detector for Mac/schema smoke only; never satisfies Session A",
     )
+    parser.add_argument(
+        "--allow-zero-detections",
+        action="store_true",
+        help="do not fail when zero boxes are logged (latency-only / ambient evals)",
+    )
     return parser.parse_args()
 
 
@@ -330,7 +335,7 @@ def main() -> None:
         print(f"{key}: {value}")
     if summary.valid_frame_count != summary.frame_count:
         raise SystemExit("One or more frames were unavailable; log retained for diagnosis")
-    if summary.detection_count == 0 and not args.allow_unavailable:
+    if summary.detection_count == 0 and not args.allow_unavailable and not args.allow_zero_detections:
         raise SystemExit("No detections logged; use a COCO bottle/cup/person and retry")
 
 

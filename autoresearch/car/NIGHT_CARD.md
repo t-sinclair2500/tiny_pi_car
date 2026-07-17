@@ -64,7 +64,16 @@ ssh rpicarbox.local 'cd ~/Desktop/tiny_pi_car && .venv/bin/python scripts/hailo_
 | end-to-end latency p50 | **~130 ms** | **27x improvement** over old pipeline |
 | detections | "person" FP at thresh≤0.35, none at 0.45+ | Ambient scene has no COCO objects; need staged targets |
 
-Primary scalars tonight: **capture_ms**, **inference_ms**, **latency p50/p90**, useful dets. Log under `.autoresearch/runs/`.
+### Council metric (fixed scalar — maximize)
+
+| Field | Role |
+|---|---|
+| **`score`** | `100 * (500 - latency_p50_ms) / (500 - 50)` clipped to \[0, 100\] |
+| **`hard_gates_passed`** | All frames valid; inference_p50 ≤ 150 ms; latency_p50 ≤ 2000 ms |
+| detections | Logged but **not scored** (no FP farming on empty scenes) |
+
+Host command: `.venv/bin/python scripts/night_perception_eval.py --json`  
+(~130 ms e2e ≈ score **~84**). Log under `.autoresearch/runs/`.
 
 ## Hypothesis queue (pick ONE per trial; cycle families on plateau)
 

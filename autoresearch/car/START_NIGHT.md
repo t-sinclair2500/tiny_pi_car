@@ -28,4 +28,4 @@ Optional council loop later:
   --attach http://127.0.0.1:4096
 ```
 
-(Live Pi metrics in NIGHT_CARD beat the stub campaign eval.)
+(Live Pi metric: `scripts/night_perception_eval.py` — maximize latency score.)
