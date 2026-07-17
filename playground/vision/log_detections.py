@@ -207,10 +207,38 @@ def _still_supplier(path: Path) -> FrameSupplier:
     return frame.copy
 
 
-def _camera_supplier(device: str) -> FrameSupplier:
-    from playground.vision.camera import grab_frame
+class _PersistentCameraSupplier:
+    """Hold one VideoCapture open; warm up once (H1 finding), then read frames.
 
-    return lambda: grab_frame(device=device, warmup_frames=25)
+    ~10x faster per-frame than reopen-per-frame (Trial 1 result).
+    """
+
+    def __init__(self, device: str, warmup_frames: int = 5) -> None:
+        import cv2
+
+        self._device = device
+        self._warmup_frames = warmup_frames
+        self._capture = cv2.VideoCapture(device, cv2.CAP_V4L2)
+        self._capture.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+        if not self._capture.isOpened():
+            raise RuntimeError(f"Failed to open {device}")
+        # Warm up AE once
+        for _ in range(max(1, warmup_frames)):
+            self._capture.read()
+
+    def __call__(self) -> Optional[np.ndarray]:
+        ok, frame = self._capture.read()
+        if ok and frame is not None:
+            return frame
+        return None
+
+    def close(self) -> None:
+        self._capture.release()
+
+
+def _camera_supplier(device: str, warmup_frames: int = 5) -> FrameSupplier:
+    """Return a persistent camera supplier (H1: keep open, warmup=5)."""
+    return _PersistentCameraSupplier(device, warmup_frames=warmup_frames)
 
 
 def _parse_args() -> argparse.Namespace:
@@ -223,6 +251,24 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--interval-s", type=float, default=0.0, help="pause between samples")
     parser.add_argument("--format", choices=("jsonl", "csv"), default="jsonl")
     parser.add_argument("--output", type=Path, help="output path; default is under /tmp/tiny_pi_car")
+    parser.add_argument(
+        "--score-thresh",
+        type=float,
+        default=None,
+        help="detection score threshold (default: 0.45 from detector)",
+    )
+    parser.add_argument(
+        "--hef-path",
+        type=str,
+        default=None,
+        help="explicit HEF path for A/B testing (e.g., playground/vision/models/yolov8m_h10.hef)",
+    )
+    parser.add_argument(
+        "--warmup-frames",
+        type=int,
+        default=5,
+        help="camera AE warmup frames (default: 5 per H1 finding; was 25)",
+    )
     parser.add_argument(
         "--allow-unavailable",
         action="store_true",
@@ -238,7 +284,13 @@ def main() -> None:
     if args.interval_s < 0:
         raise SystemExit("--interval-s must be non-negative")
 
-    detector = build_detector()
+    detector_kwargs: dict[str, object] = {}
+    if args.hef_path is not None:
+        detector_kwargs["hef_path"] = Path(args.hef_path)
+    if args.score_thresh is not None:
+        detector_kwargs["score_thresh"] = args.score_thresh
+
+    detector = build_detector(**detector_kwargs)
     unavailable = isinstance(detector, UnavailableHailoDetector)
     reason = getattr(detector, "reason", "")
     if unavailable and not args.allow_unavailable:
@@ -251,7 +303,7 @@ def main() -> None:
     supplier = (
         _still_supplier(args.image)
         if args.image
-        else _camera_supplier(args.device)
+        else _camera_supplier(args.device, warmup_frames=args.warmup_frames)
     )
     try:
         summary = log_detections(
@@ -265,9 +317,14 @@ def main() -> None:
             detector_status="unavailable" if unavailable else "ready",
         )
     finally:
-        close = getattr(detector, "close", None)
-        if callable(close):
-            close()
+        # Close persistent camera supplier (H1 improvement)
+        sup_close = getattr(supplier, "close", None)
+        if callable(sup_close):
+            sup_close()
+        # Close Hailo detector
+        det_close = getattr(detector, "close", None)
+        if callable(det_close):
+            det_close()
 
     for key, value in asdict(summary).items():
         print(f"{key}: {value}")

@@ -243,7 +243,12 @@ class HailoHEFDetector:
         )
 
 
-def build_detector(*, force_unavailable: bool = False) -> Detector:
+def build_detector(
+    *,
+    force_unavailable: bool = False,
+    hef_path: Path | None = None,
+    score_thresh: float | None = None,
+) -> Detector:
     """Select Hailo detector when probe says ready and a HEF exists; else safe empty."""
     if force_unavailable:
         return UnavailableHailoDetector("forced unavailable")
@@ -253,13 +258,16 @@ def build_detector(*, force_unavailable: bool = False) -> Detector:
             "Hailo-10H runtime not ready (need /dev/h1x-* + hailo_platform). "
             "See scripts/setup_hailo_10h.md"
         )
-    hef = prefer_hef()
-    if hef is None:
+    hef = Path(hef_path) if hef_path else prefer_hef()
+    if hef is None or not hef.is_file():
         MODEL_DIR.mkdir(parents=True, exist_ok=True)
         return UnavailableHailoDetector(
             f"Hailo ready but no HEF under {MODEL_DIR} (place hailo10h .hef files there)."
         )
     try:
-        return HailoHEFDetector(hef)
+        kwargs = {}
+        if score_thresh is not None:
+            kwargs["score_thresh"] = score_thresh
+        return HailoHEFDetector(hef, **kwargs)
     except Exception as exc:  # noqa: BLE001 — degrade gracefully for smoke
         return UnavailableHailoDetector(f"Hailo detector init failed: {exc}")

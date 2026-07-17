@@ -50,11 +50,19 @@ ssh rpicarbox.local 'cd ~/Desktop/tiny_pi_car && .venv/bin/python scripts/hailo_
 
 ## Measured baseline (no motion, 10 frames)
 
+### Before H1 fix (reopen-per-frame, warmup=25)
 | Metric | Value | Implication |
 |---|---|---|
 | inference p50/p90 | **~28 / 55 ms** | Hailo is already fast |
-| end-to-end latency p50 | **~3490 ms** | Capture/warmup path dominates — **hypotheses 1–3, 11 first** |
-| detections | 0 on ambient scene | Stage a bottle/cup **or** A/B HEFs / thresh; also verify m-model NMS parse |
+| end-to-end latency p50 | **~3490 ms** | Capture/warmup path dominated — reopen + AE per frame |
+
+### After H1 fix (persistent camera, warmup=5) ✅
+| Metric | Value | Implication |
+|---|---|---|
+| capture p50 | **~103 ms** | Single USB frame read, no open/close overhead |
+| inference p50/p90 | **~27 / 28 ms** | Hailo-10H steady (both v8m and v11m) |
+| end-to-end latency p50 | **~130 ms** | **27x improvement** over old pipeline |
+| detections | "person" FP at thresh≤0.35, none at 0.45+ | Ambient scene has no COCO objects; need staged targets |
 
 Primary scalars tonight: **capture_ms**, **inference_ms**, **latency p50/p90**, useful dets. Log under `.autoresearch/runs/`.
 
