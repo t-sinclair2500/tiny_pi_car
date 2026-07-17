@@ -1,8 +1,9 @@
 # Hailo-10H setup (Pi 5 + AI HAT+ 2 class device)
 
 **Device on this robot:** PCIe `1e60:45c4` at `0001:01:00.0` (Hailo-10H).  
-**OS today:** Raspberry Pi OS **Bookworm** (Debian 12), kernel `6.12.93+rpt-rpi-2712`.  
-**Verified:** 2026-07-14 — packages cached under `.cache/hailo-debs/` (gitignored). **Nothing installed.**
+**OS today (host docs historically):** Bookworm notes remain for Path B.  
+**Robot SD card now (2026-07-16):** fresh **Trixie** — use Path A (`hailo-h10-all`).  
+Live probe: [docs/autonomy/PI_BRINGUP.md](../docs/autonomy/PI_BRINGUP.md).
 
 Cross-checked against:
 - https://www.raspberrypi.com/documentation/computers/ai.html (requires **Trixie** + `hailo-h10-all` for AI HAT+ 2)

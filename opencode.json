@@ -10,11 +10,14 @@
       "**/captures/**",
       "**/recordings/**",
       "**/playground/vision/models/**",
-      "**/.cache/**"
+      "**/.cache/**",
+      "**/.autoresearch/artifacts/**",
+      "**/.opencode/node_modules/**"
     ]
   },
   "instructions": [
     "AGENTS.md",
+    "autoresearch/car/program.md",
     ".cursor/rules/*.mdc"
   ],
   "agent": {
@@ -25,6 +28,12 @@
       "permission": {
         "task": {
           "*": "deny",
+          "autoresearch-director": "allow",
+          "autoresearch-worker": "allow",
+          "autoresearch-helper": "allow",
+          "autoresearch-reviewer": "allow",
+          "pi-observer": "allow",
+          "pi-motion": "allow",
           "verify": "allow",
           "quick": "allow",
           "explore": "allow"

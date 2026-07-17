@@ -13,6 +13,7 @@ Released March 2026. The original repo is a minimal single-GPU LLM training harn
 | [AWESOME_LISTS.md](./AWESOME_LISTS.md) | Exploration of the GitHub awesome-list catalogs of variants/use cases |
 | [agent-loops/](./agent-loops/) | Redone research: **loops/lead agents continually prompt coding agents** (Cherny/Steinberger/Osmani; Gas Town; `/goal`; orchestration loops) |
 | [SOURCES.md](./SOURCES.md) | Primary sources and writeups used for these notes |
+| [car/](./car/) | Runnable OpenCode multi-model loop for open-world car-autonomy campaigns |
 
 ## One-paragraph summary
 

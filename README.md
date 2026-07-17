@@ -12,6 +12,7 @@ This folder is meant to be opened **on the Pi** (Remote SSH / local editor). Sta
 | `playground/` | Our thin experiments and replacements |
 | `docs/` | How-to notes for this robot |
 | `scripts/` | Small helpers (smoke checks, Hailo setup) |
+| `autoresearch/car/` | OpenCode + local-Qwen autonomy research harness and campaign runbook |
 
 ## Quick start
 
@@ -28,6 +29,15 @@ Smoke-check imports:
 ```bash
 python scripts/smoke_imports.py
 ```
+
+OpenCode autoresearch baseline (host-only; no hardware):
+
+```bash
+.venv/bin/python scripts/autoresearch_loop.py --baseline-only
+```
+
+See [autoresearch/car/README.md](autoresearch/car/README.md) for the multi-model,
+open-world perception/navigation/grasp campaign workflow.
 
 Hailo probe (expect `ready: True` after Path B install):
 

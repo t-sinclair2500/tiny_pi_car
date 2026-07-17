@@ -1,0 +1,88 @@
+{
+  "hw_arch": "hailo10h",
+  "runtime": "HailoRT 5.x on /dev/h1x-0",
+  "notes": [
+    "HEFs are gitignored. Prefer hailo10h zoo artifacts only — never hailo8/8l HEFs.",
+    "Many zoo HEFs need a Hailo Developer Zone login; paste HTTPS URLs into slots when you have them.",
+    "Hugging Face is for train/finetune + datasets on x86; export ONNX then compile with DFC v5 --hw-arch hailo10h.",
+    "See docs/research/hailo-custom-models.md and docs/autonomy/PI_BRINGUP.md."
+  ],
+  "slots": [
+    {
+      "id": "yolov8m",
+      "role": "detect-ab",
+      "filename": "yolov8m_h10.hef",
+      "labels": "coco80",
+      "zoo_hint": "Hailo model zoo HAILO10H object detection YOLOv8m (on-Pi filename)",
+      "source_url": null,
+      "sha256": null,
+      "priority": 0
+    },
+    {
+      "id": "yolov11m",
+      "role": "detect-ab",
+      "filename": "yolov11m_h10.hef",
+      "labels": "coco80",
+      "zoo_hint": "Hailo model zoo HAILO10H object detection YOLOv11m (on-Pi filename)",
+      "source_url": null,
+      "sha256": null,
+      "priority": 1
+    },
+    {
+      "id": "yolov8n",
+      "role": "detect-baseline",
+      "filename": "yolov8n.hef",
+      "labels": "coco80",
+      "zoo_hint": "Hailo model zoo HAILO10H object detection YOLOv8n",
+      "source_url": null,
+      "sha256": null,
+      "priority": 1
+    },
+    {
+      "id": "yolov8s",
+      "role": "detect-ab",
+      "filename": "yolov8s.hef",
+      "labels": "coco80",
+      "zoo_hint": "Hailo model zoo HAILO10H object detection YOLOv8s",
+      "source_url": null,
+      "sha256": null,
+      "priority": 2
+    },
+    {
+      "id": "yolov11n",
+      "role": "detect-ab",
+      "filename": "yolov11n.hef",
+      "labels": "coco80",
+      "zoo_hint": "Hailo model zoo HAILO10H object detection YOLOv11n",
+      "source_url": null,
+      "sha256": null,
+      "priority": 3
+    },
+    {
+      "id": "yolov8n_seg",
+      "role": "seg-grasp-later",
+      "filename": "yolov8n_seg.hef",
+      "labels": "coco80",
+      "zoo_hint": "Hailo model zoo HAILO10H instance segmentation YOLOv8n",
+      "source_url": null,
+      "sha256": null,
+      "priority": 10
+    },
+    {
+      "id": "grasp-candidates",
+      "role": "custom-detect",
+      "filename": "grasp_candidates.hef",
+      "labels": "custom",
+      "zoo_hint": "Finetune Ultralytics YOLO on household classes → ONNX → DFC hailo10h",
+      "source_url": null,
+      "sha256": null,
+      "priority": 20,
+      "hf_recipe": {
+        "base": "ultralytics/yolo11n",
+        "data": "captures/custom.yaml",
+        "export": "onnx imgsz=640 opset=11",
+        "compile": "hailomz compile … --hw-arch hailo10h --classes N"
+      }
+    }
+  ]
+}

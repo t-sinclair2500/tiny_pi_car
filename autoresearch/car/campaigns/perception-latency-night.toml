@@ -1,0 +1,22 @@
+[campaign]
+name = "perception-latency-night"
+objective = "Cut capture+inference latency and raise useful dets (cup/bottle/person) with no robot motion."
+program = "autoresearch/car/program.md"
+editable_paths = [
+  "playground/vision/**",
+  "playground/experiments/perception/**",
+  "playground/autoresearch/**",
+  "autoresearch/car/**",
+  "scripts/hailo_ab_compare.py",
+  "scripts/vision_suite_*.py",
+]
+# Host-side smoke: agents should prefer live Pi log_detections; this keeps loop tooling happy when GT unset.
+eval_command = [
+  "{python}", "-c",
+  "import json; print(json.dumps({'score': 0.0, 'hard_gates_passed': True, 'note': 'use NIGHT_CARD live Pi metrics'}))"
+]
+metric_key = "score"
+hard_gate_key = "hard_gates_passed"
+maximize = true
+min_delta = 0.001
+eval_timeout_s = 120

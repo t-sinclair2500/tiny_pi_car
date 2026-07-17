@@ -1,0 +1,16 @@
+[campaign]
+name = "reactive-policy-v0"
+objective = "Improve safe target alignment and approach toward useful autonomy."
+program = "autoresearch/car/program.md"
+editable_paths = [
+  "playground/autoresearch/candidate.py",
+  "playground/autonomy/**",
+  "playground/experiments/**",
+  "autoresearch/car/**",
+]
+eval_command = ["{python}", "-m", "playground.autoresearch.evaluate", "--json"]
+metric_key = "score"
+hard_gate_key = "hard_gates_passed"
+maximize = true
+min_delta = 0.000001
+eval_timeout_s = 60

@@ -1,0 +1,21 @@
+[campaign]
+name = "perception-detect-pi-v0"
+objective = "Improve detection on Pi Hailo-10H via model-zoo A/B and pipeline tweaks."
+program = "autoresearch/car/program.md"
+editable_paths = [
+  "playground/experiments/perception/**",
+  "playground/vision/**",
+  "playground/autoresearch/**",
+  "autoresearch/car/**",
+]
+eval_command = [
+  "{python}", "scripts/remote_perception_eval.py",
+  "--ground-truth", "{env:TINY_PI_PERCEPTION_GT}",
+  "--target-label", "cup", "--target-label", "bottle",
+  "--latency-budget-ms", "150", "--min-target-recall", "0.3"
+]
+metric_key = "score"
+hard_gate_key = "hard_gates_passed"
+maximize = true
+min_delta = 0.001
+eval_timeout_s = 1200

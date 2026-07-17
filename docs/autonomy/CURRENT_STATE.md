@@ -1,10 +1,13 @@
 # CURRENT_STATE — single source of truth
 
-**Probed / updated:** 2026-07-15 · **Ops runbook:** [SESSIONS.md](SESSIONS.md) · **Ticks:** [BUILD_NEXT.md](BUILD_NEXT.md) · **Index:** [docs/STATUS.md](../STATUS.md)
+**Probed / updated:** 2026-07-16 · **Ops:** [SESSIONS.md](SESSIONS.md) · **Pi live:** [PI_BRINGUP.md](PI_BRINGUP.md) · **Ticks:** [BUILD_NEXT.md](BUILD_NEXT.md)
 
 This file overrides stale “runtime not installed” / “sonar is future” / “first frame is fine” wording elsewhere. Research under `docs/research/` is background.
 
-**Last session note:** Camera UVC auto-exposure requires ~15–25 warmup frames (cold frames nearly black). `grab_frame()` warms. COCO `yolov8n` does not detect soda cans; use bottle/cup for M1–M2. MasterPi stopped via `systemctl` during playground vision. A 2026-07-15 remote logger smoke produced 10/10 valid frames, 2 `person` boxes, inference p50/p90 **16.543/17.852 ms**, and capture-to-result p50/p90 **4076.755/4088.034 ms** at `/tmp/tiny_pi_car/session-a-codex-smoke.jsonl`; Session A remains open because no target/range was deliberately staged.
+**Last session note:** Fresh **Trixie** on `rpicarbox` (`tyler@rpicarbox.local`).
+**MasterPi chassis board is not on the Pi** (no USB cam, UART motors, sonar).
+Hailo-10H PCIe is present; `/dev/h1x-0` pending `hailo-h10-all`. Host-side
+vision suite + freer autoresearch ready. See [PI_BRINGUP.md](PI_BRINGUP.md).
 
 ---
 
@@ -12,16 +15,15 @@ This file overrides stale “runtime not installed” / “sonar is future” / 
 
 | Piece | Reality |
 |---|---|
-| OS | Debian 12 **Bookworm** — staying here (no Trixie required) |
-| Hailo-10H | PCIe `1e60:45c4` @ `0001:01:00.0`, Gen3 x1 |
-| Driver / node | `hailo1x_pci`; **`/dev/h1x-0`** (not `/dev/hailo0`) |
-| HailoRT | **5.3** debs + FW 5.3.0; `hailortcli` → **HAILO10H** |
-| Python | `hailo_platform` 5.3 in `.venv`; probe **`ready: True`** |
-| HEF | `playground/vision/models/yolov8n.hef` (COCO80, gitignored) |
-| Camera | USB `32e6:9005` → `/dev/video0`; AE warmup required |
-| Stock daemon | `masterpi.service` — **stop** for playground cam/UART |
-| Sonar | **Real** I2C-1 `@0x77` (`SonarGate`, `watch_sonar`, `sonar_sample`) |
-| Motion | Mecanum + ArmIK + gripper via UART `/dev/ttyAMA0` |
+| OS | Debian 13 **Trixie** (fresh SD). Host docs may still mention Bookworm Path B. |
+| Hailo-10H | PCIe `1e60:45c4` @ `0001:01:00.0` — **present** |
+| Driver / node | Bring-up in progress: expect `hailo1x_pci` + **`/dev/h1x-0`** after `hailo-h10-all` |
+| HailoRT | Pending bring-up (`hailo-h10-all` on Trixie) |
+| Python | Host `.venv` ok; Pi `.venv` missing as of probe |
+| HEF | Slots empty until zoo HEFs dropped under `playground/vision/models/` |
+| Camera / UART / motors | **Offline** — MasterPi board not attached to this Pi |
+| Stock daemon | N/A until chassis returns |
+| Sonar | On the MasterPi board — unavailable until chassis is attached |
 
 **Install:** Path B — `./scripts/setup_hailo_10h.sh --install bookworm-hailort-5.3`. **Never** `apt install hailo-all`.
 
@@ -58,14 +60,14 @@ This file overrides stale “runtime not installed” / “sonar is future” / 
 
 ## What’s next (operational)
 
-Follow **[SESSIONS.md](SESSIONS.md)** in order:
+Agents may iterate under `playground/` + `autoresearch/car/` without waiting for
+formal Session A–C. For live hardware, prefer:
 
-1. **Session A** — COCO detect log + latency (H5, #6b; logger #6a built)
-2. **Session B** — live sonar + wheels-raised stop (#3–#5)
-3. **Session C** — tracker integration + supervised taped approach (#7b, #9, #10; pure tracker #7a built)
-4. Then grasp prep (#8, #11–#14) → M3
+1. Camera + Hailo detect log (bottle/cup) — Session A facts still useful
+2. Short motion trials with stop-on-exit — Session B without wheels-raised ceremony
+3. Tracker + supervised approach when detect is reliable
 
-Tick boxes in [BUILD_NEXT.md](BUILD_NEXT.md) as you go.
+Tick boxes in [BUILD_NEXT.md](BUILD_NEXT.md) when a fact is proven on hardware.
 
 ---
 

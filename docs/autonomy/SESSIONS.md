@@ -5,7 +5,9 @@
 **Tick queue:** [BUILD_NEXT.md](BUILD_NEXT.md)  
 **Milestones:** [architecture-and-roadmap.md](architecture-and-roadmap.md)
 
-This is the **human runbook**. Do not invent parallel plans in chat — update this file and `BUILD_NEXT.md` when sequencing changes.
+Human runbook for live sessions. Agents may also iterate under `playground/` /
+`autoresearch/car/` without waiting for a formal session checklist — keep motors
+stopped when idle, and update CURRENT_STATE when hardware facts change.
 
 ---
 
@@ -28,18 +30,14 @@ When chat and docs disagree → **update docs**, don’t keep tribal knowledge i
 Print this checklist and tick it before any live work.
 
 ### Pre-flight
-- [ ] `cd ~/Desktop/tiny_pi_car && source .venv/bin/activate`
-- [ ] `sudo systemctl stop masterpi` (or confirm `inactive`)
-- [ ] `pgrep -af MasterPi` → empty
-- [ ] `systemctl is-active masterpi` → `inactive`
-- [ ] Clear floor; human at power cutoff
-- [ ] For **any new motion**: wheels **raised** until stop path proven this session
+- [ ] `cd` repo && `source .venv/bin/activate`
+- [ ] `sudo systemctl stop masterpi` (or confirm `inactive`) when using camera/UART
+- [ ] Clear floor; human nearby for first live sessions of the day
 - [ ] `.venv/bin/python -m playground.hailo_probe` → `ready: True` (if using vision)
-- [ ] Note battery / power source (wall PSU preferred for Hailo + motion)
 
 ### During
 - [ ] One owner of `/dev/video0`, one of `/dev/ttyAMA0`, one of `/dev/h1x-0`
-- [ ] Speeds ≤ ~25 unless measured otherwise
+- [ ] Prefer moderate speeds to start; agents may go higher for experiments
 - [ ] Every motion path ends in `micro_move stop` / `RobotIO.stop_all()`
 - [ ] No unbounded `while True` without timeout + stop
 
@@ -54,8 +52,7 @@ Print this checklist and tick it before any live work.
 - `apt install hailo-all`
 - Concurrent MasterPi + playground camera/UART
 - Committing HEFs, captures, `.venv`, secrets
-- House roam / closed-loop grasp before M2 approach is green
-- Driving on a **single** untracked detection frame
+- Unbounded motion loops without timeout + stop
 
 ---
 
@@ -155,6 +152,25 @@ retains the diagnostic log.
 | B6 | Update BUILD_NEXT | #3–#5 checkboxes |
 
 **Kill:** stop fails with wheels raised → **no wheels-down work** until fixed.
+
+The OpenCode path for B3/B4 is the `pi-motion` agent plus the human-created arm
+lease. The operator creates the lease once, and the agent may chain trials within
+that monitored window. It cannot arm or extend the session itself:
+
+```sh
+# On the Pi, after stopping masterpi.service:
+.venv/bin/python -m playground.autoresearch.motion_arm arm \
+  --stage wheels-raised --ttl-s 1800 --operator-present
+
+# On the model host:
+.venv/bin/python scripts/pi_agent_gate.py motion-status
+.venv/bin/python scripts/pi_agent_gate.py motion-trial \
+  --action forward --duration-s 0.4 --speed-mm-s 25 --stage wheels-raised
+```
+
+After wheels-raised stop behavior is observed, create a new `--stage floor` lease
+for taped driving. Always finish with `pi_agent_gate.py emergency-stop` and
+`motion_arm disarm`.
 
 ### Session B sonar threshold worksheet (#3)
 

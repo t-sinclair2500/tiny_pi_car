@@ -1,7 +1,7 @@
 ---
 description: Tiny lookups only — find files, grep symbols, short diffs, or one simple shell command. Keep the main model focused.
 mode: subagent
-model: lm-studio/qwen3.5-4b-mtp
+model: lm-studio/qwen3.5-2b
 temperature: 0.1
 reasoningEffort: low
 steps: 8

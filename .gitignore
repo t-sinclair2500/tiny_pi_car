@@ -1,5 +1,6 @@
 # Python
 .venv/
+.venv
 venv/
 __pycache__/
 *.py[cod]
@@ -33,6 +34,7 @@ htmlcov/
 logs/
 tmp/
 .cache/
+.autoresearch/
 # Hailo debs / wheels / hailo-apps clone live under .cache/hailo-* (prep only; do not commit)
 
 # Robot / media dumps — never commit captures or playground snaps

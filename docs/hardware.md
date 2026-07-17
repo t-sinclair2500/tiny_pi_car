@@ -2,25 +2,26 @@
 
 ## Platform
 
-- Raspberry Pi 5, Debian 12 **Bookworm**
+- Raspberry Pi 5, Debian 13 **Trixie** (hostname `rpicarbox`)
 - HiWonder MasterPi: mecanum base, 5-DOF arm, USB camera
 - Expansion board over serial (UART `/dev/ttyAMA0`)
 - Forward ultrasonic on I2C-1 `@0x77` (`common.sonar.Sonar`) — **real hardware**, used by `SonarGate` / `watch_sonar` / `sonar_sample`
 
-## Accelerator and camera (2026-07-15)
+## Accelerator and camera (2026-07-16)
 
 | Item | Status |
 |---|---|
-| Hailo PCIe | `1e60:45c4` at `0001:01:00.0` → **Hailo-10H** (AI HAT+ 2 class), Gen3 x1 |
-| Runtime | HailoRT **5.3** installed (Path B debs). Driver `hailo1x_pci`; node **`/dev/h1x-0`** |
-| Probe | `python3 -m playground.hailo_probe` → `ready: True` |
-| HEF | Local gitignored `playground/vision/models/yolov8n.hef` (hailo10h, COCO) |
+| Hailo PCIe | `1e60:45c4` at `0001:01:00.0` → **Hailo-10H** (AI HAT+ 2 class), Gen3 x1 (`8GT/s`) |
+| Runtime | Official **`hailo-h10-all` 5.1.1**. Driver `hailo1x_pci`; node **`/dev/hailo0`** |
+| Probe | `python -m playground.hailo_probe` → `ready: True` |
+| HEF | `/usr/share/hailo-models/*_h10.hef` (+ symlinks under `playground/vision/models/`) |
 | Camera | USB `32e6:9005` → `/dev/video0` |
+| PCIe tune | `dtparam=pciex1_gen=3`; cmdline `pcie_aspm=off` |
 
-Do **not** `apt install hailo-all` (Bookworm 4.20 / Hailo-8). Detail: [hailo.md](hailo.md), [scripts/setup_hailo_10h.md](../scripts/setup_hailo_10h.md). Living snapshot: [autonomy/CURRENT_STATE.md](autonomy/CURRENT_STATE.md).
+Do **not** `apt install hailo-all` (conflicts with `hailo-h10-all`). Detail: [hailo.md](hailo.md), [scripts/setup_hailo_10h.md](../scripts/setup_hailo_10h.md). Living snapshot: [autonomy/CURRENT_STATE.md](autonomy/CURRENT_STATE.md).
 
 - Do not run `MasterPi/Camera.py` (OpenCV `-1`) and playground camera capture together. One broker owns the device.
-- `masterpi.service` is often **enabled but inactive** during playground sessions — keep it stopped while claiming UART or `/dev/video0`.
+- Prefer **not** enabling stock `masterpi.service` on this fresh image — playground owns UART/camera when testing.
 
 ## UART (Pi 5)
 
