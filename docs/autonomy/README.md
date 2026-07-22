@@ -20,6 +20,7 @@ Verify: `python3 -m playground.hailo_probe` · `python3 -m playground.vision_smo
 |---|---|
 | [SESSIONS.md](SESSIONS.md) | **Human runbook** — SOP, Sessions A/B/C, milestone map |
 | [CURRENT_STATE.md](CURRENT_STATE.md) | **SSOT** — what works / stubbed / next on this Pi |
+| [EXPERIMENT_LEARNINGS.md](EXPERIMENT_LEARNINGS.md) | Night / motion15 / auto20 / stream prep results |
 | [BUILD_NEXT.md](BUILD_NEXT.md) | Checkbox tick queue (maps 1:1 to sessions) |
 | [architecture-and-roadmap.md](architecture-and-roadmap.md) | Modules, safety contract, milestones M0–M4 |
 | [hardware-and-interfaces.md](hardware-and-interfaces.md) | Ownership, UART/camera/sonar, bring-up |

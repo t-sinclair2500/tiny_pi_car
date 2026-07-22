@@ -4,7 +4,11 @@ from __future__ import annotations
 
 from time import monotonic
 
-from playground.autonomy.roam_fsm import RoamFSM, suggested_yaw_from_detections
+from playground.autonomy.roam_fsm import (
+    RoamFSM,
+    pick_primary_detection,
+    suggested_yaw_from_detections,
+)
 from playground.autonomy.types import Observation
 
 
@@ -20,6 +24,26 @@ def test_suggested_yaw_deadband():
         ({"label": "cup", "score": 0.9, "bbox": (0.46, 0.2, 0.54, 0.6)},)
     )
     assert yaw == 0.0
+
+
+def test_pick_primary_prefers_person_over_higher_score_cup():
+    dets = (
+        {"label": "cup", "score": 0.95, "bbox": (0.1, 0.2, 0.3, 0.6)},
+        {"label": "person", "score": 0.70, "bbox": (0.5, 0.2, 0.7, 0.6)},
+    )
+    primary = pick_primary_detection(dets)
+    assert primary is not None
+    assert primary["label"] == "person"
+
+
+def test_pick_primary_highest_score_when_no_person():
+    dets = (
+        {"label": "cup", "score": 0.60, "bbox": (0.1, 0.2, 0.3, 0.6)},
+        {"label": "bottle", "score": 0.90, "bbox": (0.5, 0.2, 0.7, 0.6)},
+    )
+    primary = pick_primary_detection(dets)
+    assert primary is not None
+    assert primary["label"] == "bottle"
 
 
 def test_roam_align_command_on_detection():

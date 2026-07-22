@@ -1,13 +1,14 @@
 # CURRENT_STATE — single source of truth
 
-**Probed / updated:** 2026-07-16 · **Ops:** [SESSIONS.md](SESSIONS.md) · **Pi live:** [PI_BRINGUP.md](PI_BRINGUP.md) · **Ticks:** [BUILD_NEXT.md](BUILD_NEXT.md)
+**Probed / updated:** 2026-07-22 · **Ops:** [SESSIONS.md](SESSIONS.md) · **Pi live:** [PI_BRINGUP.md](PI_BRINGUP.md) · **Ticks:** [BUILD_NEXT.md](BUILD_NEXT.md) · **Experiments:** [EXPERIMENT_LEARNINGS.md](EXPERIMENT_LEARNINGS.md)
 
-This file overrides stale “runtime not installed” / “sonar is future” / “first frame is fine” wording elsewhere. Research under `docs/research/` is background.
+This file overrides stale wording elsewhere. Research under `docs/research/` is background.
+Live session numbers and failure modes: **[EXPERIMENT_LEARNINGS.md](EXPERIMENT_LEARNINGS.md)**.
 
-**Last session note:** Fresh **Trixie** on `rpicarbox` (`tyler@rpicarbox.local`).
-**MasterPi chassis board is not on the Pi** (no USB cam, UART motors, sonar).
-Hailo-10H PCIe is present; `/dev/h1x-0` pending `hailo-h10-all`. Host-side
-vision suite + freer autoresearch ready. See [PI_BRINGUP.md](PI_BRINGUP.md).
+**Last session note:** Chassis + cam + Hailo worked on Desktop repo via SSH
+(`rpicarbox` → `/home/tyler/Desktop/tiny_pi_car`). Night perception + motion15-direct +
+auto20 Phase A completed; Phase B aborted on soft laundry jam (sonar ~3″ blind zone).
+Stream roam daemon/docs are on host; **Pi smoke still pending** (Pi was powered off).
 
 ---
 
@@ -15,17 +16,15 @@ vision suite + freer autoresearch ready. See [PI_BRINGUP.md](PI_BRINGUP.md).
 
 | Piece | Reality |
 |---|---|
-| OS | Debian 13 **Trixie** (fresh SD). Host docs may still mention Bookworm Path B. |
-| Hailo-10H | PCIe `1e60:45c4` @ `0001:01:00.0` — **present** |
-| Driver / node | Bring-up in progress: expect `hailo1x_pci` + **`/dev/h1x-0`** after `hailo-h10-all` |
-| HailoRT | Pending bring-up (`hailo-h10-all` on Trixie) |
-| Python | Host `.venv` ok; Pi `.venv` missing as of probe |
-| HEF | Slots empty until zoo HEFs dropped under `playground/vision/models/` |
-| Camera / UART / motors | **Offline** — MasterPi board not attached to this Pi |
-| Stock daemon | N/A until chassis returns |
-| Sonar | On the MasterPi board — unavailable until chassis is attached |
+| OS | Debian 13 **Trixie** on Pi |
+| Hailo-10H | Works with HailoRT; device node often **`/dev/hailo0`** (not only `/dev/h1x-0`) |
+| Camera | `/dev/video0` USB; AE warmup required |
+| UART / mecanum / arm | Live via `RobotIO(live=True)` / `physical_trial` / `micro_move` when MasterPi board attached |
+| Sonar | I2C ultrasonic; ~**3″** height → **misses low floor clutter** |
+| Stock daemon | Prefer Desktop playground path; stop stock `masterpi` if it owns UART |
+| Research root | **`/home/tyler/Desktop/tiny_pi_car` only** |
 
-**Install:** Path B — `./scripts/setup_hailo_10h.sh --install bookworm-hailort-5.3`. **Never** `apt install hailo-all`.
+**Install:** Prefer documented Hailo bring-up scripts. **Never** `apt install hailo-all`.
 
 ---
 
@@ -33,26 +32,26 @@ vision suite + freer autoresearch ready. See [PI_BRINGUP.md](PI_BRINGUP.md).
 
 | Capability | Status |
 |---|---|
-| Hailo probe + HEF load + COCO detect | Works (after AE warmup) |
-| `HailoHEFDetector` / `build_detector()` | Wired; unavailable fallback if missing |
-| Bounded detection logger | JSONL/CSV + capture/inference latency; live Session A evidence pending |
-| `DetectionTracker` | Pure IoU/centroid association; 3 consecutive hits; unit-tested, not runner-wired |
-| `vision_smoke` / `autonomy_smoke` | Dry-run / no motors by default |
-| Safety lease + SonarGate | Logic + unit tests |
-| RoamFSM | Align-yaw intents only; **no** translation until M2 |
-| GraspFSM | Stub; **no** live grasp |
-| `RobotIO` | Dry-run default; live opt-in |
-| `micro_move` | Bounded live commands |
-| Camera grab | V4L2 + **warmup**; shared `/tmp/robot_cam_latest.jpg` if fresh |
+| Hailo probe + HEF load + COCO detect | Proven on Pi (after AE warmup) |
+| Persistent camera + warmup=5 | Night session: ~130 ms e2e vs ~3.5 s reopen |
+| `snap_and_detect` + detector reuse | motion15-direct best path |
+| Vision-guided short trial | bbox yaw; scores ~65 vs dispatch ~86 (latency tax) |
+| Sonar-gated forward ≤30 mm/s | auto20 Phase A scores ~84–86 |
+| Safety lease + SonarGate | Logic + unit tests; clearance ~220 mm |
+| RoamFSM | Live yaw / crawl / hold / fault (capped); used by daemon |
+| `roam_daemon` + floor clutter gate | Host-complete; Pi smoke pending |
+| GraspFSM | Stub; daemon refuses grip while driving (L4 later) |
+| `RobotIO` | Dry-run default; live opt-in; `look_down` / `look_ahead` / `neutral` poses |
+| `micro_move` | Bounded live commands + e-stop path |
 
 ---
 
-## Stubbed / missing
+## Stubbed / missing / blocked
 
-- No grasp / seg / custom-class HEF (no `can` class)
-- No `geometry.py`, `poses.py`, `replay.py`
-- Tracker is not yet wired into `Observation` / a supervised approach runner
-- No proven wheels-down supervised approach runner yet
+- Stream roam **Pi smoke** (clear floor + soft-pile refuse)
+- L3 sticky track / L4 live grasp
+- Soft-obstacle ML (heuristic L2 only)
+- Tracker not fully wired into continuous approach
 - No cam–arm calibration numbers
 - Battery cutoff not in `SafetyGate` yet
 
@@ -60,12 +59,9 @@ vision suite + freer autoresearch ready. See [PI_BRINGUP.md](PI_BRINGUP.md).
 
 ## What’s next (operational)
 
-Agents may iterate under `playground/` + `autoresearch/car/` without waiting for
-formal Session A–C. For live hardware, prefer:
-
-1. Camera + Hailo detect log (bottle/cup) — Session A facts still useful
-2. Short motion trials with stop-on-exit — Session B without wheels-raised ceremony
-3. Tracker + supervised approach when detect is reliable
+1. Power Pi → rsync → stream smoke per [START_STREAM.md](../../autoresearch/car/START_STREAM.md)
+2. Composer research on `roam_daemon` / floor thresholds (no OpenCode on this track)
+3. Unlock L3 only after L1/L2 green
 
 Tick boxes in [BUILD_NEXT.md](BUILD_NEXT.md) when a fact is proven on hardware.
 
@@ -74,10 +70,14 @@ Tick boxes in [BUILD_NEXT.md](BUILD_NEXT.md) when a fact is proven on hardware.
 ## Quick verify
 
 ```sh
-sudo systemctl stop masterpi
+# On Pi (Desktop repo)
+sudo systemctl stop masterpi 2>/dev/null || true
 source .venv/bin/activate
-.venv/bin/python -m playground.hailo_probe   # ready: True
+.venv/bin/python -m playground.hailo_probe
 .venv/bin/python -m playground.vision_smoke
 .venv/bin/python -m playground.autonomy_smoke
-.venv/bin/python -m playground.watch_sonar
+
+# From host
+.venv/bin/python scripts/pi_agent_gate.py --host rpicarbox status
+.venv/bin/python scripts/pi_agent_gate.py --host rpicarbox emergency-stop
 ```

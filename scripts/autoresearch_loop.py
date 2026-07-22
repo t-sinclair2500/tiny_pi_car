@@ -307,14 +307,18 @@ def run(args: argparse.Namespace) -> int:
         history = _tail_results(results_path)
 
         if args.council and (trial == 1 or (trial - 1) % args.director_every == 0):
-            director_prompt = f"""You direct car-autonomy research.
+            director_prompt = f"""You MANAGE car-autonomy research as the LEAD (35B).
+Plan and decide; do NOT do every bash/grep/snap yourself.
+MUST call 1–2 subagents (helper=2B quick checks; worker/pi-observer=9B medium work).
+Max 1–2 concurrent. 27B is unused — never route to it.
 Campaign objective: {campaign.objective}
 Preferred edit surfaces: {', '.join(campaign.editable_paths)}
 Current best metric: {best:.6f} ({'maximize' if campaign.maximize else 'minimize'})
 
 Propose ONE concrete next experiment. You may revise campaign/program files when useful.
+On motion-hour prefer vision-nav (snap/perceive → short safe move → stop → resnap).
 Prefer live camera, Hailo model-zoo A/B, and real motion when they help.
-End with `HYPOTHESIS:` and a short worker directive.
+End with `HYPOTHESIS:` and a short worker directive for the 9B worker.
 
 Program:
 {program}
@@ -449,12 +453,17 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--iterations", type=int, default=8)
     parser.add_argument("--plateau-limit", type=int, default=5)
     parser.add_argument("--agent-timeout", type=int, default=900)
-    parser.add_argument("--worker-model", default="lm-studio/qwen3.6-35b-a3b-mtp")
-    parser.add_argument("--director-model", default="lm-studio/qwen3.6-27b-mtp")
+    # 35B manages; 9B worker/reviewer execute; 2B helper; 27B unused.
+    parser.add_argument("--worker-model", default="lm-studio/qwen3.5-9b-mtp")
+    parser.add_argument("--director-model", default="lm-studio/qwen3.6-35b-a3b-mtp")
     parser.add_argument("--reviewer-model", default="lm-studio/qwen3.5-9b-mtp")
     parser.add_argument("--helper-model", default="lm-studio/qwen3.5-2b")
     parser.add_argument("--director-every", type=int, default=4)
-    parser.add_argument("--council", action="store_true", help="enable 35B director + 9B review")
+    parser.add_argument(
+        "--council",
+        action="store_true",
+        help="enable director (35B manager) + occasional 9B review on keeps",
+    )
     parser.add_argument("--commit", action="store_true", help="commit keeps on autoresearch/* branch")
     parser.add_argument("--attach", help="reuse an `opencode serve` URL")
     parser.add_argument("--baseline-only", action="store_true")

@@ -1,10 +1,13 @@
 # Start Qwen night run (host)
 
-LM Studio is up (`lms` port 1234). Then:
+LM Studio is up (`lms` port 1234). Start the tiny translator that strips empty
+`tool_calls: []` (OpenCode can hang without this), then serve:
 
 ```bash
 cd ~/Documents/GitHub/tiny_pi_car
-opencode serve --port 4096
+systemctl --user start lms-openai-proxy   # :1240 → :1234
+# OpenCode baseURL should be http://127.0.0.1:1240/v1
+systemctl --user restart opencode-serve   # reload baseURL if already running
 ```
 
 In OpenCode, open **`autoresearch-director`** and paste:

@@ -1,0 +1,26 @@
+[campaign]
+name = "stream-roam"
+objective = "Improve on-Pi continuous roam (STREAM_CARD): safe crawl + sonar veto + look-down floor gate. Host syncs; daemon runs on Pi. No OpenCode. Maximize course score from stream_roam_eval."
+program = "autoresearch/car/program.md"
+editable_paths = [
+  "playground/autonomy/**",
+  "playground/vision/**",
+  "scripts/stream_roam_eval.py",
+  "scripts/pi_agent_gate.py",
+  "autoresearch/car/**",
+]
+eval_command = [
+  "{python}", "scripts/stream_roam_eval.py",
+  "--host", "rpicarbox",
+  "--remote-root", "/home/tyler/Desktop/tiny_pi_car",
+  "--duration-s", "30",
+  "--max-speed-mm-s", "25",
+  "--allow-wheels",
+  "--look-down-first",
+  "--json",
+]
+metric_key = "score"
+hard_gate_key = "hard_gates_passed"
+maximize = true
+min_delta = 0.5
+eval_timeout_s = 180

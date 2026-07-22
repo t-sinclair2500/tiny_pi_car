@@ -1,0 +1,32 @@
+[campaign]
+name = "motion-hour"
+objective = "Primary: short vision-conditioned motion trials (snap/Hailo → small safe move → stop → resnap) under MOTION_HOUR_CARD fence. Secondary: lower dispatch overhead. Every trial ends fully stopped. Wheels ALLOWED this hour only."
+program = "autoresearch/car/program.md"
+editable_paths = [
+  "playground/**",
+  "autoresearch/car/**",
+  "scripts/motion_hour_eval.py",
+  "scripts/pi_agent_gate.py",
+  "scripts/autoresearch_loop.py",
+]
+# Fixed scalar: 100 * completion_ratio * overhead_factor * vision_factor
+# (--with-vision). See scripts/motion_hour_eval.py. --allow-wheels required.
+eval_command = [
+  "{python}", "scripts/motion_hour_eval.py",
+  "--host", "rpicarbox.local",
+  "--remote-root", "/home/tyler/Desktop/tiny_pi_car",
+  "--action", "yaw_left",
+  "--duration-s", "0.6",
+  "--speed-mm-s", "40",
+  "--yaw", "0.3",
+  "--budget-ms", "4000",
+  "--floor-ms", "500",
+  "--allow-wheels",
+  "--with-vision",
+  "--json",
+]
+metric_key = "score"
+hard_gate_key = "hard_gates_passed"
+maximize = true
+min_delta = 0.5
+eval_timeout_s = 120

@@ -19,6 +19,10 @@ HEFs, and drive the robot for experiments. Always stop motors when a trial ends.
 
 ```bash
 lms server status
+# Strip LM Studio empty tool_calls: [] so OpenCode does not hang on them
+python3 scripts/lms_openai_proxy.py   # :1240 → LMS :1234
+# or: systemctl --user start lms-openai-proxy
+# ~/.config/opencode/opencode.jsonc lm-studio baseURL → http://127.0.0.1:1240/v1
 opencode models lm-studio
 
 # optional loads
@@ -32,7 +36,7 @@ lms load qwen3.5-2b --estimate-only
 .venv/bin/python -m playground.autoresearch.evaluate --json
 
 # council run (director every N trials)
-opencode serve --port 4096
+systemctl --user restart opencode-serve   # picks up baseURL
 .venv/bin/python scripts/start_autoresearch_worktree.py \
   --tag autonomy-1 -- \
   --council --director-every 3 --iterations 12 \
@@ -66,5 +70,20 @@ Pi live facts (Trixie bring-up): [`docs/autonomy/PI_BRINGUP.md`](../../docs/auto
 
 ## Contract
 
-See [`NIGHT_CARD.md`](./NIGHT_CARD.md) · [`START_NIGHT.md`](./START_NIGHT.md). Hard rules are few: **no wheels tonight**,
-no secrets, hailo10h HEFs only, timed stops, prefer `playground/`.
+Perception-only default: [`NIGHT_CARD.md`](./NIGHT_CARD.md) · [`START_NIGHT.md`](./START_NIGHT.md).
+Motion-hour window (wheels ALLOWED, ~60 min, human present):
+[`MOTION_HOUR_CARD.md`](./MOTION_HOUR_CARD.md) · [`START_MOTION_HOUR.md`](./START_MOTION_HOUR.md) ·
+campaign [`campaigns/motion-hour.toml`](./campaigns/motion-hour.toml).
+Stream roam (continuous on-Pi loop, no OpenCode):
+[`STREAM_CARD.md`](./STREAM_CARD.md) · [`START_STREAM.md`](./START_STREAM.md) ·
+campaign [`campaigns/stream-roam.toml`](./campaigns/stream-roam.toml).
+
+Hard rules are few: **no wheels unless a motion-hour or stream card is explicitly active**,
+and even then only via `--allow-wheels`, no secrets, hailo10h HEFs only, timed stops with an
+explicit final stop, prefer `playground/`.
+
+## Experiment digest
+
+Committed write-up of scores, laundry-jam failure, and stream leapfrog status:
+[`docs/autonomy/EXPERIMENT_LEARNINGS.md`](../../docs/autonomy/EXPERIMENT_LEARNINGS.md).
+Raw tick JSON stays under `.autoresearch/runs/` (gitignored).

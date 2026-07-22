@@ -144,6 +144,63 @@ def build_remote_command(args: argparse.Namespace) -> str:
             f"set -u; sudo -n systemctl stop masterpi || true; cd {root}; "
             f"{python} -m playground.micro_move stop"
         )
+    if args.operation == "roam-start":
+        if not args.allow_wheels:
+            raise ValueError("roam-start requires --allow-wheels (see autoresearch/car/STREAM_CARD.md)")
+        look = "--look-down-first " if args.look_down_first else ""
+        explore = "--explore-crawl " if args.explore_crawl else ""
+        snap = (
+            f"--snap-dir {shlex.quote(args.snap_dir)} "
+            if args.snap_dir
+            else ""
+        )
+        log = shlex.quote(args.log_jsonl)
+        # Background daemon; host watches JSONL / roam-status.
+        return (
+            "set -eu; "
+            f"cd {root}; mkdir -p /tmp/tiny_pi_car; "
+            "if test -f /tmp/tiny_pi_car/roam_daemon.pid; then "
+            "  old=$(cat /tmp/tiny_pi_car/roam_daemon.pid || true); "
+            "  if test -n \"$old\" && kill -0 \"$old\" 2>/dev/null; then "
+            "    echo 'roam_daemon already running pid:'$old >&2; exit 4; "
+            "  fi; "
+            "fi; "
+            f"nohup {python} -m playground.autonomy.roam_daemon "
+            f"--duration-s {args.duration_s:.3f} "
+            f"--max-speed-mm-s {args.max_speed_mm_s:.3f} "
+            f"--allow-wheels {look}{explore}{snap}"
+            f"--log-jsonl {log} "
+            ">/tmp/tiny_pi_car/roam_daemon.out 2>&1 & "
+            "echo $! >/tmp/tiny_pi_car/roam_daemon.pid; "
+            "echo started_pid:$(cat /tmp/tiny_pi_car/roam_daemon.pid); "
+            f"echo log:{log}"
+        )
+    if args.operation == "roam-stop":
+        return (
+            "set -u; "
+            f"cd {root}; "
+            "if test -f /tmp/tiny_pi_car/roam_daemon.pid; then "
+            "  pid=$(cat /tmp/tiny_pi_car/roam_daemon.pid || true); "
+            "  if test -n \"$pid\"; then kill -TERM \"$pid\" 2>/dev/null || true; "
+            "  sleep 0.5; kill -KILL \"$pid\" 2>/dev/null || true; fi; "
+            "  rm -f /tmp/tiny_pi_car/roam_daemon.pid; "
+            "fi; "
+            f"{python} -m playground.micro_move stop >/dev/null 2>&1 || true; "
+            "echo roam:stopped"
+        )
+    if args.operation == "roam-status":
+        return (
+            "set -u; "
+            "if test -f /tmp/tiny_pi_car/roam_daemon.pid; then "
+            "  pid=$(cat /tmp/tiny_pi_car/roam_daemon.pid); "
+            "  if kill -0 \"$pid\" 2>/dev/null; then echo roam:running pid:$pid; "
+            "  else echo roam:stale_pid:$pid; fi; "
+            "else echo roam:not_running; fi; "
+            "test -f /tmp/tiny_pi_car/roam_daemon.jsonl && "
+            "  echo jsonl_lines:$(wc -l </tmp/tiny_pi_car/roam_daemon.jsonl) || "
+            "  echo jsonl:missing; "
+            "tail -n 3 /tmp/tiny_pi_car/roam_daemon.jsonl 2>/dev/null || true"
+        )
     if args.operation == "shell":
         if not args.remote_cmd:
             raise ValueError("shell requires --remote-cmd")
@@ -165,16 +222,24 @@ def main() -> int:
             "arm",
             "motion-trial",
             "emergency-stop",
+            "roam-start",
+            "roam-stop",
+            "roam-status",
             "shell",
         ),
     )
-    parser.add_argument("--host", type=_validate_host, default="rpicarbox.local")
-    parser.add_argument("--remote-root", type=_remote_root, default="/tmp/tiny_pi_car")
+    parser.add_argument("--host", type=_validate_host, default="rpicarbox")
+    parser.add_argument(
+        "--remote-root",
+        type=_remote_root,
+        default="/home/tyler/Desktop/tiny_pi_car",
+    )
     parser.add_argument("--frames", type=int, default=20)
     parser.add_argument("--interval-s", type=float, default=0.1)
     parser.add_argument("--action", choices=("forward", "reverse", "yaw_left", "yaw_right"), default="forward")
     parser.add_argument("--duration-s", type=float, default=0.8)
     parser.add_argument("--speed-mm-s", type=float, default=40.0)
+    parser.add_argument("--max-speed-mm-s", type=float, default=25.0)
     parser.add_argument("--yaw", type=float, default=0.35)
     parser.add_argument("--stage", default="free")
     parser.add_argument("--ttl-s", type=int, default=3600)
@@ -185,9 +250,29 @@ def main() -> int:
         "--allow-wheels",
         action="store_true",
         help=(
-            "permit chassis motion for motion-trial (forward/reverse/yaw); "
+            "permit chassis motion for motion-trial / roam-start; "
             f"default off — see {NIGHT_CARD}"
         ),
+    )
+    parser.add_argument(
+        "--look-down-first",
+        action="store_true",
+        help="roam-start: run look_down floor clutter gate before crawl",
+    )
+    parser.add_argument(
+        "--explore-crawl",
+        action="store_true",
+        help="roam-start: slow forward when no target if clear",
+    )
+    parser.add_argument(
+        "--snap-dir",
+        default="",
+        help="roam-start: remote dir for look_down/look_ahead snaps",
+    )
+    parser.add_argument(
+        "--log-jsonl",
+        default="/tmp/tiny_pi_car/roam_daemon.jsonl",
+        help="roam-start: remote JSONL path",
     )
     parser.add_argument("--remote-cmd", default="")
     parser.add_argument("--dry-run", action="store_true")
@@ -195,12 +280,22 @@ def main() -> int:
     blocked = motion_trial_requires_allow_wheels(args)
     if blocked:
         parser.error(blocked)
+    if args.operation == "roam-start" and not args.allow_wheels:
+        parser.error(
+            "roam-start requires --allow-wheels (see autoresearch/car/STREAM_CARD.md)"
+        )
     if not 1 <= args.frames <= 600:
         parser.error("--frames must be between 1 and 600")
     if not 0.0 <= args.interval_s <= 30.0:
         parser.error("--interval-s must be between 0 and 30")
-    if not 0.01 <= args.duration_s <= 60.0:
-        parser.error("--duration-s must be between 0.01 and 60")
+    if args.operation in ("roam-start",):
+        if not 1.0 <= args.duration_s <= 300.0:
+            parser.error("--duration-s must be between 1 and 300 for roam-start")
+        if not 1.0 <= args.max_speed_mm_s <= 30.0:
+            parser.error("--max-speed-mm-s must be between 1 and 30 for roam-start")
+    else:
+        if not 0.01 <= args.duration_s <= 60.0:
+            parser.error("--duration-s must be between 0.01 and 60")
     if not 0.0 <= args.speed_mm_s <= 250.0:
         parser.error("--speed-mm-s must be between 0 and 250")
     if not 0.0 <= args.yaw <= 2.0:

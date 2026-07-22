@@ -1,7 +1,7 @@
 ---
 description: Pi motion helper — drive the car for experiments; stop motors when done.
 mode: subagent
-model: lm-studio/qwen3.6-35b-a3b-mtp
+model: lm-studio/qwen3.5-9b-mtp
 temperature: 0.15
 steps: 40
 permission:

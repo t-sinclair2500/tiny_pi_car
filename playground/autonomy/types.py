@@ -29,6 +29,7 @@ class Observation:
     sonar_mm: float | None = None
     camera_ok: bool = False
     hailo_ready: bool = False
+    floor_clutter_risk: bool = False
     notes: str = ""
 
 

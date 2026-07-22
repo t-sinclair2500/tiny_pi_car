@@ -67,10 +67,23 @@ class RobotIO:
             return
         assert self._chassis is not None
         self._chassis.set_velocity(float(cmd.chassis_mm_s), float(cmd.direction_deg), float(cmd.yaw))
-        if cmd.arm_pose == "neutral" and self._ak is not None:
-            # cam-up / carry-ish pose — short, bounded
+        if cmd.arm_pose and self._ak is not None:
+            self.set_arm_pose(cmd.arm_pose)
+
+    def set_arm_pose(self, pose: str, *, settle_s: float | None = None) -> None:
+        """Bounded ArmIK poses. ``neutral`` / ``look_ahead`` = cam-up; ``look_down`` = floor FOV."""
+        if not self._opened or not self.live or self._ak is None:
+            return
+        if pose in ("neutral", "look_ahead"):
+            # cam-up / carry-ish
             self._ak.setPitchRangeMoving((0, 6, 18), 0, -90, 90, 1200)
-            time.sleep(1.3)
+            time.sleep(settle_s if settle_s is not None else 1.3)
+        elif pose == "look_down":
+            # Pitch camera toward near floor (soft-clutter check). Timed + bounded.
+            self._ak.setPitchRangeMoving((0, 10, 10), -25, -90, 90, 1200)
+            time.sleep(settle_s if settle_s is not None else 1.3)
+        else:
+            raise ValueError(f"unknown arm_pose: {pose!r}")
 
     def stop_all(self) -> None:
         stop = RobotCommand(chassis_mm_s=0.0, direction_deg=90.0, yaw=0.0, reason="stop_all")
